@@ -1,0 +1,64 @@
+name: Pull cached or build & cache Docker images
+inputs:
+  codename:
+    description: Distribution codename or release
+    required: true
+  architecture:
+    description: Package build host architecture
+    required: true
+  dockerRegistryURL:
+    description:  Docker registry URL
+    required: true
+  dockerRegistryRepo:
+    description:  Docker registry repo
+    required: true
+  dockerRegistryUser:
+    description:  Docker registry user
+    required: true
+  dockerRegistryPassword:
+    description:  Secret Docker registry password
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: Show settings
+    shell: bash {0}
+    run: |
+      echo Codename: ${{ inputs.codename }}
+      echo Architecture: ${{ inputs.architecture }}
+      echo Docker registry URL: ${{ inputs.dockerRegistryURL }}
+      echo Docker registry user: ${{ inputs.dockerRegistryUser }}
+
+  - name:  Pull or build & cache Docker image
+    env:
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
+      DOCKER_REGISTRY_PASSWORD: ${{ inputs.dockerRegistryPassword }}
+      DOCKERFILE: ${{ github.action_path }}/Dockerfile
+      ENTRYPOINT: ${{ github.action_path }}/entrypoint
+      CODENAME: ${{ inputs.codename }}
+      ARCHITECTURE: ${{ inputs.architecture }}
+    shell: bash -xe {0}
+    run: |
+      printf $DOCKER_REGISTRY_PASSWORD | \
+          docker login $DOCKER_REGISTRY_URL -u $DOCKER_REGISTRY_USER --password-stdin
+
+      echo "Attempting to pull cached image"
+      containerimage --pull ${CODENAME} ${ARCHITECTURE} && RES=0 || RES=$?
+
+      if test $RES != 0; then
+          echo "Failed to pull image; building new image"
+          containerimage --build \
+              ${CODENAME} ${ARCHITECTURE}
+
+          echo "Pushing built image"
+          TRY=0; MAX_TRIES=5
+          while test $((TRY++)) -lt ${MAX_TRIES}; do
+            containerimage --push ${CODENAME} ${ARCHITECTURE}
+            RES=$?
+            test $RES -ne 0 || break
+            echo "Try $TRY exit status $RES; retrying"
+          done
+          exit ${RES}
+      fi

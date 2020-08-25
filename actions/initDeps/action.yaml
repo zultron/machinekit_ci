@@ -1,0 +1,15 @@
+name: Install script dependencies
+runs:
+  using: "composite"
+  steps:
+
+  - name: Install Python libs needed by CI scripts
+    shell: bash -xe {0}
+    run: |
+      pip3 install cloudsmith-cli
+
+      git clone https://github.com/zultron/docker-registry-client
+      cd docker-registry-client; python3 setup.py install
+
+      cd ${{ github.action_path }}
+      python3 setup.py install

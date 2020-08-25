@@ -1,0 +1,117 @@
+name: Build packages for a particular distro version and architecture
+inputs:
+  vendor:
+    description: Distribution vendor
+    required: true
+  codename:
+    description: Distribution codename or release
+    required: true
+  architecture:
+    description: Package build host architecture
+    required: true
+  dockerRegistryURL:
+    description:  Docker registry URL
+    required: true
+  dockerRegistryRepo:
+    description:  Docker registry repo
+    required: true
+  dockerRegistryUser:
+    description:  Docker registry user
+    required: true
+  signPackages:
+    description: Whether to sign packages, true or false
+    required: false
+    default: false
+  packageSigningKey:
+    description: Secret GPG signing key
+    required: false
+  packageSigningKeyID:
+    description: GPG signing key ID
+    required: false
+  uploadDirectory:
+    description: Where to place built packages
+    required: false
+    default: ./packages
+runs:
+  using: "composite"
+  steps:
+
+  - name: >
+      Configure source package for ${{ inputs.vendor }}
+      ${{ inputs.codename}}, ${{ inputs.architecture }}
+    shell: bash -xe {0}
+    env:
+      CODENAME: ${{ inputs.codename }}
+      ARCHITECTURE: ${{ inputs.architecture }}
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
+    run: |
+      rundocker $CODENAME $ARCHITECTURE \
+          buildpackages --configure-source
+
+  - name: >
+      Build Debian packages for ${{ inputs.vendor }}
+      ${{ inputs.codename}}, ${{ inputs.architecture }}
+    shell: bash -xe {0}
+    env:
+      CODENAME: ${{ inputs.codename }}
+      ARCHITECTURE: ${{ inputs.architecture }}
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
+    run: |
+      rundocker $CODENAME $ARCHITECTURE \
+          buildpackages --build-packages
+
+  - name: Sign packages with Signer Key
+    env:
+      CODENAME: ${{ inputs.codename }}
+      ARCHITECTURE: ${{ inputs.architecture }}
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
+      GNUPGHOME: /tmp/secrets_mountpoint
+      PACKAGE_SIGNING_KEY: ${{ inputs.packageSigningKey }}
+      PACKAGE_SIGNING_KEY_ID: ${{ inputs.packageSigningKeyID }}
+      SIGN_PACKAGES: ${{ inputs.signPackages }}
+    shell: bash -xe {0}
+    run: |
+      test $SIGN_PACKAGES == true || exit 0
+
+      # Create tmpfs for $GNUPGHOME
+      mkdir -p $GNUPGHOME
+      MOUNT_OPTS="size=50m,mode=0700,uid=$(id -u),gid=$(id -g)"
+      sudo mount -t tmpfs -o $MOUNT_OPTS tmpfs $GNUPGHOME
+
+      # Import signing keys into $GNUPGHOME
+      rundocker --env PACKAGE_SIGNING_KEY --env GNUPGHOME \
+              --volume $GNUPGHOME \
+              $CODENAME $ARCHITECTURE \
+          buildpackages --import-gpg-from-secret-env-var PACKAGE_SIGNING_KEY
+
+      # Sign packages with signing keys
+      rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
+              --volume $GNUPGHOME \
+              $CODENAME $ARCHITECTURE \
+          buildpackages --sign-packages -a $ARCHITECTURE
+
+      # Remove tmpfs for $GNUPGHOME
+      sudo umount $GNUPGHOME
+
+  - name: Prepare build artifact for upload
+    env:
+      CODENAME: ${{ inputs.codename }}
+      ARCHITECTURE: ${{ inputs.architecture }}
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
+      UPLOAD_DIRECTORY: ${{ inputs.uploadDirectory }}
+    shell: bash -xe {0}
+    run: |
+      mkdir $UPLOAD_DIRECTORY
+      rundocker --notty $CODENAME $ARCHITECTURE \
+          buildpackages -a $ARCHITECTURE \
+              --list-packages --with-buildinfo --with-changes \
+          | xargs -t -I '{}' cp -v '{}' \
+            $UPLOAD_DIRECTORY

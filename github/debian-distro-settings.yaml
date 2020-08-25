@@ -1,0 +1,89 @@
+# Package name
+package: mypackage
+
+# Project name for human-readable output
+projectName: My Package
+
+# Package-specific command to run during image build before installing
+#    build deps (default: none)
+scriptPreCmd: .github/docker/mypackage_script_pre.sh
+
+# Package-specific command to run during image build after installing
+#    build deps (default: none)
+scriptPostCmd: .github/docker/mypackage_script_post.sh
+
+# Package-specific command to run in container before package build
+#    (default: none)
+configureSourceCmd: .github/docker/mypackage_configure_source.sh
+
+# Non-standard package subdirectory (default: `.`)
+#sourceDir: some_subdir
+
+# Location of `debian/` packaging directory (default: `./debian`)
+#debian_dir: some_subdir/debian
+
+# Docker image name and tag template (default:
+#    `@PACKAGE@-@DISTRIBUTION@-builder` and `@OSRELEASE@_@ARCHITECTURE@`)
+#
+# DANGER: Changing imageNameFmt or imageTagFmt will mean a new Docker
+#    image name!  Public Docker images in GitHub Packages cannot be
+#    deleted, every change will stay visible 'forever' in form of old
+#    packages
+#
+#imageNameFmt: @PACKAGE@-@VENDOR@-builder
+#imageTagFmt: @OSRELEASE@_@ARCHITECTURE@
+
+# Docker image label prefix (default: `io.machinekit.${{package}}`)
+#label_prefix: io.machinekit.mypackage
+
+# Cloudsmith repo slug, if not the same as `package`
+#cloudsmith_repo_slug: mypackage
+
+osDistros:
+  # List of Debian and Ubuntu OS version configuration data
+  - baseImage: debian:stretch
+    codename: Stretch
+    vendor: Debian
+    osRelease: 9
+  - baseImage: debian:buster
+    codename: Buster
+    vendor: Debian
+    osRelease: 10
+  - baseImage: debian:bullseye
+    codename: Bullseye
+    vendor: Debian
+    osRelease: 11
+  - baseImage: ubuntu:focal
+    codename: Focal
+    vendor: Ubuntu
+    osRelease: 20.04
+
+allowedCombinations:
+  # Supported combinations of `osRelease` : architecture
+  #
+  # amd64:
+  - architecture: amd64
+    osRelease: 9
+  - architecture: amd64
+    osRelease: 10
+  - architecture: amd64
+    osRelease: 20.04
+  # arm64:
+  - architecture: arm64
+    osRelease: 9
+  - architecture: arm64
+    osRelease: 10
+  - architecture: arm64
+    osRelease: 20.04
+  # armhf:
+  - architecture: armhf
+    osRelease: 9
+  - architecture: armhf
+    osRelease: 10
+  - architecture: armhf
+    osRelease: 20.04
+  # i386:  (discontinued in Ubuntu Focal)
+  - architecture: i386
+    osRelease: 9
+  - architecture: i386
+    osRelease: 10
