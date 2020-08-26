@@ -121,10 +121,13 @@ class BuildContainerImage(helpers.DistroSettings):
         debian directories, adding Dockerfile and entrypoint from GH Action
         directory, and yield this as a context manager
         """
+        git_paths = [self.debian_dir]
+        if os.path.exists(".github/docker"):
+            git_paths.append(".github/docker")
         with tempfile.TemporaryDirectory(prefix='mk-ci-tmp-context-') as context_dir:
             sh.tar(
                 sh.git.archive(
-                    "--format=tar", "HEAD", "--", ".github/docker", self.debian_dir,
+                    "--format=tar", "HEAD", "--", *git_paths,
                     _err=sys.stderr.buffer,
                     _cwd=self.normalized_path),
                 "xvf", "-",
@@ -133,9 +136,12 @@ class BuildContainerImage(helpers.DistroSettings):
             for src in (self.dockerfile_path, self.entrypoint_path):
                 fname = os.path.basename(src)
                 dest = os.path.join(context_dir, fname)
-                print(repr(src), repr(dest))
                 shutil.copyfile(src, dest)
                 shutil.copymode(src, dest)
+            for i in (".github", ".github/docker"): # Docker COPY fails withot
+                path = os.path.join(context_dir, i)
+                if not os.path.exists(path):
+                    os.mkdir(path)
             yield context_dir
 
     def generate_image_hash(self):

@@ -49,8 +49,7 @@ runs:
 
       if test $RES != 0; then
           echo "Failed to pull image; building new image"
-          containerimage --build \
-              ${CODENAME} ${ARCHITECTURE}
+          containerimage --build ${CODENAME} ${ARCHITECTURE}
 
           echo "Pushing built image"
           TRY=0; MAX_TRIES=5

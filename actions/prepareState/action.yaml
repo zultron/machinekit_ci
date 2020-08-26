@@ -38,11 +38,6 @@ runs:
     run: |
       echo "$GITHUB_CONTEXT"
 
-  - name: Install build script Python dependencies
-    shell: bash -xe {0}
-    run: |
-      pip3 install sh PyYAML
-
   - name: Prepare matrix from JSON
     id: data_matrix_normalizer
     shell: bash -e {0}
