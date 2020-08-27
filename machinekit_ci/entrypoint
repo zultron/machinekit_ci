@@ -84,5 +84,8 @@ do
     source ${FILE}
 done
 
+# If no command is given, run a shell
+if test -z "$*"; then set bash; fi
+
 printf "ENTRYPOINT END\n======================================================\n" 1>&2
 exec "$@"
