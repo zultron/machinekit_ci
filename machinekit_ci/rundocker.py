@@ -30,7 +30,7 @@ class RunDocker(helpers.DistroSettings):
                 # Mount git source in standard location
                 "--volume={}:/home/machinekit/build/git_repo".format(self.normalized_path),
                 "--workdir=/home/machinekit/build/git_repo",
-                "--name={}_{}".format(self.os_release, self.architecture),
+                "--hostname={}_{}".format(self.os_codename, self.architecture),
                 ]
         # print("path: {}".format(self.path))
         # print("version: {}".format(self.os_codename))
