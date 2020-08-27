@@ -131,7 +131,7 @@ class DistroSettings(object):
     # Optional file for providing environment settings outside of CI
     local_env_file = "local-env.yaml"
 
-    def __init__(self: object, path: str, version=None, host_architecture=None):
+    def __init__(self: object, path: str, version=None, architecture=None):
         # Set up paths
         if not path:
             path = os.getcwd()
@@ -140,8 +140,8 @@ class DistroSettings(object):
         self.read_distro_settings()
         self.read_local_env()
 
-        if version and host_architecture:
-            self.set_os_arch_combination(version, host_architecture)
+        if version and architecture:
+            self.set_os_arch_combination(version, architecture)
         else:
             self.os_arch_is_set = False
 

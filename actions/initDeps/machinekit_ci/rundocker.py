@@ -11,9 +11,9 @@ import machinekit_ci.script_helpers as helpers
 
 
 class RunDocker(helpers.DistroSettings):
-    def __init__(self: object, path, version, host_architecture, notty, env,
+    def __init__(self: object, path, version, architecture, notty, env,
                  volume, docker_args):
-        super(RunDocker, self).__init__(path, version, host_architecture)
+        super(RunDocker, self).__init__(path, version, architecture)
         # Use current process std{in,out,err} unless no tty or --notty flag
         self.env_vars = env
         self.volumes = volume
@@ -33,7 +33,7 @@ class RunDocker(helpers.DistroSettings):
                 ]
         # print("path: {}".format(self.path))
         # print("version: {}".format(self.os_codename))
-        # print("host_architecture: {}".format(self.architecture))
+        # print("architecture: {}".format(self.architecture))
         # print("docker_args: {}".format(self.docker_args))
 
     def run_cmd(self: object, cmd: list):
@@ -92,7 +92,7 @@ class RunDocker(helpers.DistroSettings):
         parser.add_argument("version",
                             metavar="VERSION",
                             help="OS version number or codename")
-        parser.add_argument("host_architecture",
+        parser.add_argument("architecture",
                             action=helpers.HostArchitectureValidAction,
                             default=sh.dpkg_architecture(
                                 "-qDEB_HOST_ARCH",
@@ -111,10 +111,10 @@ class RunDocker(helpers.DistroSettings):
         volume = args_dict.pop('volume')
         notty = args_dict.pop('notty')
         version = args_dict.pop('version')
-        host_architecture = args_dict.pop('host_architecture')
+        architecture = args_dict.pop('architecture')
         cmd = args_dict.pop('command')
         rd = cls(path=path, version=version,
-                       host_architecture=host_architecture, notty=notty, env=env,
+                       architecture=architecture, notty=notty, env=env,
                        volume=volume, docker_args=docker_args)
         try:
             rd.run_cmd(cmd)

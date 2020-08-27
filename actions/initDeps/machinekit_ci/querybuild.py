@@ -13,8 +13,8 @@ import machinekit_ci.script_helpers as helpers
 
 class Query(helpers.DistroSettings):
     _query_keys = set()
-    def __init__(self: object, path, version, host_architecture):
-        super(Query, self).__init__(path, version, host_architecture)
+    def __init__(self: object, path, version, architecture):
+        super(Query, self).__init__(path, version, architecture)
         self._hash_os_distros()
 
         if 'GITHUB_CONTEXT' in os.environ:
@@ -126,7 +126,7 @@ class Query(helpers.DistroSettings):
                             help="Key to query")
 
         args = parser.parse_args()
-        query_obj = cls(path=args.path, version=args.version, host_architecture=args.architecture)
+        query_obj = cls(path=args.path, version=args.version, architecture=args.architecture)
         if args.list_keys:
             query_obj.list_keys()
         elif args.query_keys:

@@ -138,24 +138,25 @@ RUN cd /tmp && \
 
 FROM machinekit_builder_base AS machinekit_builder_base_arch
 
-ARG HOST_ARCHITECTURE
+ARG ARCHITECTURE
+ENV ARCHITECTURE=${ARCHITECTURE}
 
-RUN if ! dpkg-architecture -e${HOST_ARCHITECTURE};    \
+RUN if ! dpkg-architecture -e${ARCHITECTURE};    \
     then                                              \
-        dpkg --add-architecture ${HOST_ARCHITECTURE}; \
+        dpkg --add-architecture ${ARCHITECTURE}; \
     fi
 
 # Ubuntu ports repos for cross-building
 RUN if test $(source /etc/os-release; echo $ID) = ubuntu \
-            -a ${HOST_ARCHITECTURE} != amd64 \
-	    -a ${HOST_ARCHITECTURE} != i386; then \
+            -a ${ARCHITECTURE} != amd64 \
+	    -a ${ARCHITECTURE} != i386; then \
 	CODENAME=$(source /etc/os-release; echo $VERSION_CODENAME) && \
 	sed </etc/apt/sources.list \
-	    >/etc/apt/sources.list.d/ubuntu-ports-${HOST_ARCHITECTURE}.list \
+	    >/etc/apt/sources.list.d/ubuntu-ports-${ARCHITECTURE}.list \
 	    -e "/http:\/\/security/ d"  -e "/^#/ d"  -e "/^$/ d" \
-	    -e "s/^deb /deb [arch=${HOST_ARCHITECTURE}] /" \
+	    -e "s/^deb /deb [arch=${ARCHITECTURE}] /" \
 	    -e "s,http://archive.ubuntu.com/ubuntu/,http://ports.ubuntu.com/ubuntu-ports/," && \
-        cat /etc/apt/sources.list.d/ubuntu-ports-${HOST_ARCHITECTURE}.list && \
+        cat /etc/apt/sources.list.d/ubuntu-ports-${ARCHITECTURE}.list && \
 	sed -i /etc/apt/sources.list \
 	    -e "/^#/ d"  -e "/^$/ d" \
 	    -e "s/^deb /deb [arch=amd64] /" && \
@@ -165,7 +166,7 @@ RUN if test $(source /etc/os-release; echo $ID) = ubuntu \
 # Non-standard exception, using the non-standard crossbuild-essential-i386:amd64
 # package in Machinekit/Machinekit Cloudsmith repository
 RUN if [[ "$(dpkg --print-architecture)" == "amd64" &&                    \
-          "$HOST_ARCHITECTURE" == "i386" &&                               \
+          "$ARCHITECTURE" == "i386" &&                               \
           "$(lsb_release -cs)" == "stretch" ]];                           \
     then                                                                  \
         apt-get install -y                                                \
@@ -178,7 +179,7 @@ RUN if [[ "$(dpkg --print-architecture)" == "amd64" &&                    \
     fi
 
 RUN if [[ "$(dpkg --print-architecture)" == "amd64" && \
-          "$HOST_ARCHITECTURE" == "i386" &&            \
+          "$ARCHITECTURE" == "i386" &&            \
           "$(lsb_release -cs)" == "stretch" ]];        \
     then                                               \
         printf "%b"                                    \
@@ -190,9 +191,9 @@ RUN if [[ "$(dpkg --print-architecture)" == "amd64" && \
     else                                                              \
         printf "%b"                                                   \
                "#!/bin/bash\n"                                        \
-               "export CC=$(dpkg-architecture -a${HOST_ARCHITECTURE}  \
+               "export CC=$(dpkg-architecture -a${ARCHITECTURE}  \
                             -qDEB_HOST_GNU_TYPE)-gcc\n"               \
-               "export CXX=$(dpkg-architecture -a${HOST_ARCHITECTURE} \
+               "export CXX=$(dpkg-architecture -a${ARCHITECTURE} \
                             -qDEB_HOST_GNU_TYPE)-g++\n"               \
                > /opt/environment/compiler.sh;                        \
     fi
@@ -200,15 +201,15 @@ RUN if [[ "$(dpkg --print-architecture)" == "amd64" && \
 RUN printf "%b"                                               \
            "#!/bin/bash\n"                                    \
            "set -a\n"                                         \
-           "$(dpkg-architecture -a${HOST_ARCHITECTURE} -s)\n" \
+           "$(dpkg-architecture -a${ARCHITECTURE} -s)\n" \
            "set +a\n"                                         \
            > /opt/environment/dpkg-architecture.sh
 
-# This on Debian 9 Stretch, HOST_ARCHITECTURE i386 actually abuses the fact
+# This on Debian 9 Stretch, ARCHITECTURE i386 actually abuses the fact
 # that the i686-linux-gnu-gcc does not exists (the $CC is set to 'gcc -m32'),
 # so the comparison will fail and '-Werror' will be exported - what is the
 # end result we want on Stretch anyway
-RUN if ! [[ $(echo -e "$($(dpkg-architecture -a${HOST_ARCHITECTURE}     \
+RUN if ! [[ $(echo -e "$($(dpkg-architecture -a${ARCHITECTURE}     \
                            -qDEB_HOST_GNU_TYPE)-gcc -dumpversion)\n8" | \
             sort -V | head -n1) == "8" ]];                              \
     then                                                                \
@@ -218,7 +219,7 @@ RUN if ! [[ $(echo -e "$($(dpkg-architecture -a${HOST_ARCHITECTURE}     \
                > /opt/environment/dpkg_flags.sh;                        \
     fi
 
-ENV HOST_ARCHITECTURE=${HOST_ARCHITECTURE}
+ENV ARCHITECTURE=${ARCHITECTURE}
 ENV IN_MACHINEKIT_BUILDER=1
 
 ######################################################################
@@ -252,7 +253,7 @@ RUN if test -n "${SCRIPT_PRE_CMD}"; then \
 RUN cd /tmp &&                                                                \
     apt-get update &&                                                         \
     mk-build-deps --build-arch=$(dpkg-architecture -qDEB_BUILD_ARCH)          \
-                  --host-arch=${HOST_ARCHITECTURE}                            \
+                  --host-arch=${ARCHITECTURE}                            \
                   -ir -t                                                      \
         "apt-get -o Debug::pkgProblemResolver=yes --no-install-recommends -y" \
                   ./debian/control                                            \

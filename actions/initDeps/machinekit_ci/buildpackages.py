@@ -50,22 +50,22 @@ from debian.deb822 import Changes
 
 
 class BuildPackages(helpers.DistroSettings):
-    def __init__(self: object, path, host_architecture):
+    def __init__(self: object, path, architecture):
         super(BuildPackages, self).__init__(path)
-        self.host_architecture = host_architecture
+        self.architecture = architecture
         self.architecture_can_be_build()
         sys.stderr.write("Package directory:  {}\n".format(self.source_dir))
-        sys.stderr.write("Host architecture:  {}\n".format(self.host_architecture))
+        sys.stderr.write("Host architecture:  {}\n".format(self.architecture))
 
     def architecture_can_be_build(self: object) -> None:
         build_architectures = sh.dpkg(
             "--print-foreign-architectures", _tty_out=False).strip().split()
         build_architectures.append(sh.dpkg("--print-architecture",
                                            _tty_out=False).strip())
-        if self.host_architecture not in build_architectures:
+        if self.architecture not in build_architectures:
             raise ValueError(
                 "Host architecture {} cannot be built.".format(
-                    self.host_architecture))
+                    self.architecture))
 
     def configure_source(self: object):
         if self.configure_src_cmd is None:
@@ -89,7 +89,7 @@ class BuildPackages(helpers.DistroSettings):
             dpkg_buildpackage_string_arguments = ["-uc",
                                                   "-us",
                                                   "-a",
-                                                  self.host_architecture,
+                                                  self.architecture,
                                                   "-B"]
             if sh.lsb_release("-cs", _tty_out=False).strip().lower() in ["stretch", "bionic"]:
                 dpkg_buildpackage_string_arguments.append("-d")
@@ -126,7 +126,7 @@ class BuildPackages(helpers.DistroSettings):
     @property
     def changes_file_path(self: object):
         changes_file = "{}_{}_{}.changes".format(
-            self.package_name, self.package_version, self.host_architecture)
+            self.package_name, self.package_version, self.architecture)
         return os.path.join(self.source_parent_dir, changes_file)
 
     gpg_home_regex = re.compile(r"^Home:\s*(.*)$", flags=re.MULTILINE)
@@ -187,8 +187,8 @@ class BuildPackages(helpers.DistroSettings):
                             default=os.getcwd(),
                             help="Path to root of git repository")
         parser.add_argument("-a",
-                            "--host-architecture",
-                            dest="host_architecture",
+                            "--architecture",
+                            dest="architecture",
                             action=helpers.HostArchitectureValidAction,
                             default=sh.dpkg_architecture(
                                 "-qDEB_HOST_ARCH",
@@ -220,7 +220,7 @@ class BuildPackages(helpers.DistroSettings):
 
         try:
             buildpackages = cls(
-                args.path, args.host_architecture)
+                args.path, args.architecture)
             if args.configure_source:
                 buildpackages.configure_source()
             if args.build_packages:

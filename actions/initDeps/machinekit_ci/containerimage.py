@@ -210,7 +210,7 @@ class BuildContainerImage(helpers.DistroSettings):
         args = list()
         # --build-arg
         self.build_arg(args, 'DEBIAN_DISTRO_BASE', self.base_image)
-        self.build_arg(args, 'HOST_ARCHITECTURE', self.architecture)
+        self.build_arg(args, 'ARCHITECTURE', self.architecture)
         self.build_arg(args, 'DEBIAN_DIR', self.debian_dir)
         self.build_arg(args, 'ENTRYPOINT', 'entrypoint')
 
@@ -224,7 +224,7 @@ class BuildContainerImage(helpers.DistroSettings):
         self.build_label(args, 'project', self.project_name)
         self.build_label(args, 'os_vendor', self.vendor.capitalize())
         self.build_label(args, 'os_codename', self.os_codename)
-        self.build_label(args, 'host_architecture', self.architecture)
+        self.build_label(args, 'architecture', self.architecture)
         self.build_label(args, 'build-date',
                          datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.build_label(args, 'vcs-ref', self.git_sha)
