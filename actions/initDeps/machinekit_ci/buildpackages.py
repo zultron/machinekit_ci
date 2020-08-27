@@ -179,6 +179,13 @@ class BuildPackages(helpers.DistroSettings):
         parser = argparse.ArgumentParser(
             description="Build packages for Debian like distributions")
 
+        # Default architecture
+        default_architecture = os.environ.get(
+            "ARCHITECTURE",
+            sh.dpkg_architecture(
+                "-qDEB_HOST_ARCH",
+                _tty_out=False).strip())
+
         # Optional arguments
         parser.add_argument("-p",
                             "--path",
@@ -190,9 +197,7 @@ class BuildPackages(helpers.DistroSettings):
                             "--architecture",
                             dest="architecture",
                             action=helpers.HostArchitectureValidAction,
-                            default=sh.dpkg_architecture(
-                                "-qDEB_HOST_ARCH",
-                                _tty_out=False).strip(),
+                            default=default_architecture,
                             metavar="ARCHITECTURE",
                             help="Build packages for specific architecture")
         parser.add_argument("--configure-source",

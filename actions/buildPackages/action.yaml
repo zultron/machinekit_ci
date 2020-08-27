@@ -94,7 +94,7 @@ runs:
       rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
               --volume $GNUPGHOME \
               $CODENAME $ARCHITECTURE \
-          buildpackages --sign-packages -a $ARCHITECTURE
+          buildpackages --sign-packages
 
       # Remove tmpfs for $GNUPGHOME
       sudo umount $GNUPGHOME
@@ -111,7 +111,6 @@ runs:
     run: |
       mkdir $UPLOAD_DIRECTORY
       rundocker --notty $CODENAME $ARCHITECTURE \
-          buildpackages -a $ARCHITECTURE \
-              --list-packages --with-buildinfo --with-changes \
+          buildpackages --list-packages --with-buildinfo --with-changes \
           | xargs -t -I '{}' cp -v '{}' \
             $UPLOAD_DIRECTORY
