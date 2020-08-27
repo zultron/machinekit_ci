@@ -32,8 +32,8 @@ class RunDocker(helpers.DistroSettings):
                 "--workdir=/home/machinekit/build/git_repo",
                 ]
         # print("path: {}".format(self.path))
-        # print("version: {}".format(self.armed_os_codename))
-        # print("host_architecture: {}".format(self.armed_architecture))
+        # print("version: {}".format(self.os_codename))
+        # print("host_architecture: {}".format(self.architecture))
         # print("docker_args: {}".format(self.docker_args))
 
     def run_cmd(self: object, cmd: list):
@@ -116,4 +116,7 @@ class RunDocker(helpers.DistroSettings):
         rd = cls(path=path, version=version,
                        host_architecture=host_architecture, notty=notty, env=env,
                        volume=volume, docker_args=docker_args)
-        rd.run_cmd(cmd)
+        try:
+            rd.run_cmd(cmd)
+        except ValueError as e:
+            sys.stderr.write("Error:  Command exited non-zero:  {}\n".format(str(e)))

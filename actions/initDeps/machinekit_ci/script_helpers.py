@@ -233,9 +233,9 @@ class DistroSettings(object):
     def template(self: object, format: str) -> str:
         replacements = dict(
             PACKAGE = self.package,
-            VENDOR = self.armed_vendor,
-            ARCHITECTURE = self.armed_architecture,
-            OSRELEASE = self.armed_os_release,
+            VENDOR = self.vendor,
+            ARCHITECTURE = self.architecture,
+            OSRELEASE = self.os_release,
         )
         result = format
         for key, val in replacements.items():
@@ -284,11 +284,11 @@ class DistroSettings(object):
                             os_data['osRelease'], combination['osRelease'],
                             rel_tol=1e-5) and
                             combination['architecture'].lower().__eq__(architecture.lower())):
-                        self.armed_base_image = os_data['baseImage'].lower()
-                        self.armed_architecture = combination['architecture'].lower()
-                        self.armed_vendor = os_data['vendor'].lower()
-                        self.armed_os_release = str(os_data['osRelease'])
-                        self.armed_os_codename = os_data['codename'].lower()
+                        self.base_image = os_data['baseImage'].lower()
+                        self.architecture = combination['architecture'].lower()
+                        self.vendor = os_data['vendor'].lower()
+                        self.os_release = str(os_data['osRelease'])
+                        self.os_codename = os_data['codename'].lower()
                         self.os_arch_is_set = True
                         return True
         return False

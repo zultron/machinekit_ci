@@ -98,7 +98,7 @@ class BuildPackages(helpers.DistroSettings):
                                  _err=sys.stderr.buffer,
                                  _cwd=self.source_dir)
         except sh.ErrorReturnCode as e:
-            message = "Packages cannot be build because of an error\n{0}".format(
+            message = "Packages cannot be built because of an error\n{0}".format(
                 e)
             raise ValueError(message)
 
@@ -233,5 +233,5 @@ class BuildPackages(helpers.DistroSettings):
             if args.list_packages:
                 buildpackages.list_packages(args.with_buildinfo, args.with_changes)
         except ValueError as e:
-            sys.stderr.write(str(e) + '\n')
+            sys.stderr.write("Error:  Command exited non-zero:  {}\n".format(str(e)))
             sys.exit(1)

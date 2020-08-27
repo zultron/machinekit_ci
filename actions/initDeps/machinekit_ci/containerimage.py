@@ -193,11 +193,11 @@ class BuildContainerImage(helpers.DistroSettings):
             'ls', *ls_opts, **sh_xargs_kwargs)
 
     def build_image(self: object, target=None, dry_run=False) -> None:
-        if any(tested is None for tested in [self.armed_base_image,
-                                             self.armed_architecture,
-                                             self.armed_os_release,
-                                             self.armed_vendor,
-                                             self.armed_os_codename]
+        if any(tested is None for tested in [self.base_image,
+                                             self.architecture,
+                                             self.os_release,
+                                             self.vendor,
+                                             self.os_codename]
                ):
             raise ValueError("Not all values are prepared for build.")
         tag_suffix = ('-'+target) if target else ""
@@ -209,8 +209,8 @@ class BuildContainerImage(helpers.DistroSettings):
 
         args = list()
         # --build-arg
-        self.build_arg(args, 'DEBIAN_DISTRO_BASE', self.armed_base_image)
-        self.build_arg(args, 'HOST_ARCHITECTURE', self.armed_architecture)
+        self.build_arg(args, 'DEBIAN_DISTRO_BASE', self.base_image)
+        self.build_arg(args, 'HOST_ARCHITECTURE', self.architecture)
         self.build_arg(args, 'DEBIAN_DIR', self.debian_dir)
         self.build_arg(args, 'ENTRYPOINT', 'entrypoint')
 
@@ -222,9 +222,9 @@ class BuildContainerImage(helpers.DistroSettings):
         self.build_label(args, 'maintainer_name', self.author_name)
         self.build_label(args, 'maintainer_email', self.author_email)
         self.build_label(args, 'project', self.project_name)
-        self.build_label(args, 'os_vendor', self.armed_vendor.capitalize())
-        self.build_label(args, 'os_codename', self.armed_os_codename)
-        self.build_label(args, 'host_architecture', self.armed_architecture)
+        self.build_label(args, 'os_vendor', self.vendor.capitalize())
+        self.build_label(args, 'os_codename', self.os_codename)
+        self.build_label(args, 'host_architecture', self.architecture)
         self.build_label(args, 'build-date',
                          datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
         self.build_label(args, 'vcs-ref', self.git_sha)
@@ -252,7 +252,7 @@ class BuildContainerImage(helpers.DistroSettings):
 
             # Show `docker build` command and list build context files
             sys.stderr.write("Building image, {} {} {}, hash {}; command:\n".format(
-                self.armed_vendor, self.armed_os_codename, self.armed_architecture, image_hash))
+                self.vendor, self.os_codename, self.architecture, image_hash))
             sys.stderr.write("    docker build \\\n   '{}'\n".format(
                 "' \\\n   '".join(args)))
             sys.stderr.write("sh_kwargs: {}\n".format(sh_kwargs))
@@ -309,7 +309,7 @@ class BuildContainerImage(helpers.DistroSettings):
             return False
 
         sys.stderr.write("Pulling image, {} {} {}, hash {}; command:\n".format(
-            self.armed_vendor, self.armed_os_codename, self.armed_architecture, image_hash))
+            self.vendor, self.os_codename, self.architecture, image_hash))
         sys.stderr.write("    docker pull {}\n".format(self.image_registry_name_tag))
         if not dry_run:
             sh.docker.pull(self.image_registry_name_tag,
