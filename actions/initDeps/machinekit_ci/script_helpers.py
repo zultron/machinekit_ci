@@ -233,9 +233,9 @@ class DistroSettings(object):
     def template(self: object, format: str) -> str:
         replacements = dict(
             PACKAGE = self.package,
-            VENDOR = self.vendor,
+            VENDOR = self.os_vendor,
             ARCHITECTURE = self.architecture,
-            OSRELEASE = self.os_release,
+            RELEASE = self.os_release,
         )
         result = format
         for key, val in replacements.items():
@@ -256,7 +256,7 @@ class DistroSettings(object):
     def image_tag(self):
         self.assert_os_arch_is_set()
         image_tag_fmt = self.distro_settings.get(
-            'imageTagFmt','@OSRELEASE@_@ARCHITECTURE@')
+            'imageTagFmt','@RELEASE@_@ARCHITECTURE@')
         image_tag = self.template(image_tag_fmt)
         return image_tag
 
@@ -278,16 +278,16 @@ class DistroSettings(object):
     def set_os_arch_combination(self: object, version, architecture) -> bool:
         for os_data in self.distro_settings['osDistros']:
             if (os_data['codename'].lower().__eq__(str(version).lower()) or
-                 str(os_data['osRelease']).__eq__(version)):
+                 str(os_data['release']).__eq__(version)):
                 for combination in self.distro_settings['allowedCombinations']:
                     if (math.isclose(
-                            os_data['osRelease'], combination['osRelease'],
+                            os_data['release'], combination['release'],
                             rel_tol=1e-5) and
                             combination['architecture'].lower().__eq__(architecture.lower())):
                         self.base_image = os_data['baseImage'].lower()
                         self.architecture = combination['architecture'].lower()
-                        self.vendor = os_data['vendor'].lower()
-                        self.os_release = str(os_data['osRelease'])
+                        self.os_vendor = os_data['vendor'].lower()
+                        self.os_release = str(os_data['release'])
                         self.os_codename = os_data['codename'].lower()
                         self.os_arch_is_set = True
                         return True

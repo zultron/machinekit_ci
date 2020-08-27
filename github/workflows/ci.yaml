@@ -100,7 +100,7 @@ jobs:
       with:
         name: >-
           ${{ env.GITHUB_REPO }}-${{ env.VENDOR_LOWER }}-${{
-            matrix.osRelease }}-${{ matrix.architecture }}-${{
+            matrix.release }}-${{ matrix.architecture }}-${{
             github.sha }}-${{ needs.prepareState.outputs.Timestamp }}
         path: ${{ github.event.repository.name }}-${{ matrix.vendorLower }}
 

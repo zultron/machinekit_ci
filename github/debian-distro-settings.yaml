@@ -23,7 +23,7 @@ configureSourceCmd: .github/docker/mypackage_configure_source.sh
 #debian_dir: some_subdir/debian
 
 # Docker image name and tag template (default:
-#    `@PACKAGE@-@DISTRIBUTION@-builder` and `@OSRELEASE@_@ARCHITECTURE@`)
+#    `@PACKAGE@-@DISTRIBUTION@-builder` and `@RELEASE@_@ARCHITECTURE@`)
 #
 # DANGER: Changing imageNameFmt or imageTagFmt will mean a new Docker
 #    image name!  Public Docker images in GitHub Packages cannot be
@@ -31,7 +31,7 @@ configureSourceCmd: .github/docker/mypackage_configure_source.sh
 #    packages
 #
 #imageNameFmt: @PACKAGE@-@VENDOR@-builder
-#imageTagFmt: @OSRELEASE@_@ARCHITECTURE@
+#imageTagFmt: @RELEASE@_@ARCHITECTURE@
 
 # Docker image label prefix (default: `io.machinekit.${{package}}`)
 #label_prefix: io.machinekit.mypackage
@@ -44,46 +44,46 @@ osDistros:
   - baseImage: debian:stretch
     codename: Stretch
     vendor: Debian
-    osRelease: 9
+    release: 9
   - baseImage: debian:buster
     codename: Buster
     vendor: Debian
-    osRelease: 10
+    release: 10
   - baseImage: debian:bullseye
     codename: Bullseye
     vendor: Debian
-    osRelease: 11
+    release: 11
   - baseImage: ubuntu:focal
     codename: Focal
     vendor: Ubuntu
-    osRelease: 20.04
+    release: 20.04
 
 allowedCombinations:
-  # Supported combinations of `osRelease` : architecture
+  # Supported combinations of `release` : architecture
   #
   # amd64:
   - architecture: amd64
-    osRelease: 9
+    release: 9
   - architecture: amd64
-    osRelease: 10
+    release: 10
   - architecture: amd64
-    osRelease: 20.04
+    release: 20.04
   # arm64:
   - architecture: arm64
-    osRelease: 9
+    release: 9
   - architecture: arm64
-    osRelease: 10
+    release: 10
   - architecture: arm64
-    osRelease: 20.04
+    release: 20.04
   # armhf:
   - architecture: armhf
-    osRelease: 9
+    release: 9
   - architecture: armhf
-    osRelease: 10
+    release: 10
   - architecture: armhf
-    osRelease: 20.04
+    release: 20.04
   # i386:  (discontinued in Ubuntu Focal)
   - architecture: i386
-    osRelease: 9
+    release: 9
   - architecture: i386
-    osRelease: 10
+    release: 10

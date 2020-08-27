@@ -23,12 +23,12 @@ class Query(helpers.DistroSettings):
 
     def _hash_os_distros(self):
         # Create dicts of the `osDistros` config with release and codename as keys
-        self._os_distro_dict = {d['osRelease']:d for d in self.distro_settings['osDistros']}
+        self._os_distro_dict = {d['release']:d for d in self.distro_settings['osDistros']}
         self._os_distro_dict.update({d['codename']:d for d in self.distro_settings['osDistros']})
 
         # Create matrix dict
         self._matrix_dict = {
-            (c['architecture'],c['osRelease']):self._os_distro_dict[c['osRelease']].copy()
+            (c['architecture'],c['release']):self._os_distro_dict[c['release']].copy()
             for c in self.distro_settings['allowedCombinations']
         }
         for k, v in self._matrix_dict.items():

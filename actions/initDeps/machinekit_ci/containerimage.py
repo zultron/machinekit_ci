@@ -196,7 +196,7 @@ class BuildContainerImage(helpers.DistroSettings):
         if any(tested is None for tested in [self.base_image,
                                              self.architecture,
                                              self.os_release,
-                                             self.vendor,
+                                             self.os_vendor,
                                              self.os_codename]
                ):
             raise ValueError("Not all values are prepared for build.")
@@ -222,7 +222,7 @@ class BuildContainerImage(helpers.DistroSettings):
         self.build_label(args, 'maintainer_name', self.author_name)
         self.build_label(args, 'maintainer_email', self.author_email)
         self.build_label(args, 'project', self.project_name)
-        self.build_label(args, 'os_vendor', self.vendor.capitalize())
+        self.build_label(args, 'os_vendor', self.os_vendor.capitalize())
         self.build_label(args, 'os_codename', self.os_codename)
         self.build_label(args, 'architecture', self.architecture)
         self.build_label(args, 'build-date',
@@ -252,7 +252,7 @@ class BuildContainerImage(helpers.DistroSettings):
 
             # Show `docker build` command and list build context files
             sys.stderr.write("Building image, {} {} {}, hash {}; command:\n".format(
-                self.vendor, self.os_codename, self.architecture, image_hash))
+                self.os_vendor, self.os_codename, self.architecture, image_hash))
             sys.stderr.write("    docker build \\\n   '{}'\n".format(
                 "' \\\n   '".join(args)))
             sys.stderr.write("sh_kwargs: {}\n".format(sh_kwargs))
@@ -309,7 +309,7 @@ class BuildContainerImage(helpers.DistroSettings):
             return False
 
         sys.stderr.write("Pulling image, {} {} {}, hash {}; command:\n".format(
-            self.vendor, self.os_codename, self.architecture, image_hash))
+            self.os_vendor, self.os_codename, self.architecture, image_hash))
         sys.stderr.write("    docker pull {}\n".format(self.image_registry_name_tag))
         if not dry_run:
             sh.docker.pull(self.image_registry_name_tag,
