@@ -3,7 +3,7 @@
 
 # GitHub user/organization and repository name
 DOCKER_REGISTRY_USER: my_github_id
-DOCKER_REGISTRY_REPO: ec-debianize
+DOCKER_REGISTRY_REPO: my_github_repo
 
 # Docker registry settings
 #

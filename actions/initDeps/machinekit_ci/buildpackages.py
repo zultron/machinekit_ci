@@ -162,14 +162,15 @@ class BuildPackages(helpers.DistroSettings):
     def get_package_list(self: object):
         with open(self.changes_file_path, 'r') as f:
             changes = Changes(f)
-        return [f['name'] for f in changes['Files']]
+        return [os.path.join(self.source_parent_dir, f['name'])
+                for f in changes['Files']]
 
     def list_packages(self: object, with_buildinfo=False, with_changes=False):
         for f in self.get_package_list():
             if f.endswith('.buildinfo') and not with_buildinfo:
                 continue
             print(f)
-        print(os.path.basename(self.changes_file_path))
+        print(self.changes_file_path)
 
 
     @classmethod

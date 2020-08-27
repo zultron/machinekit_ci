@@ -84,6 +84,7 @@ class CloudsmithUploader(helpers.DistroSettings):
         for dirname, fname in self.walk_package_directory():
             ordr = self.ordr(dirname)
             sys.stderr.write("Uploading package {} {}\n".format(ordr, fname))
+            sys.stderr.flush()
             args = ['--republish', ordr, fname]
             if dry_run:
                 sys.stderr.write("cloudsmith push deb {} {} {}\n".format(*args))
