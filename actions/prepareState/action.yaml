@@ -1,16 +1,16 @@
 name: Prepare data used in subsequent jobs
 description: Set up build matrix and check configuration
 inputs:
-  CloudsmithToken:
-    description:  Secret Cloudsmith token
+  cloudsmithAPIKey:
+    description:  Secret Cloudsmith API key
     required: false
 outputs:
   GithubRegistryURL:
     description:  GitHub registry URL
     value: https://docker.pkg.github.com
-  HasCloudsmithToken:
-    description: "If $CLOUDSMITH_TOKEN set, 'true', otherwise 'false'"
-    value: ${{ steps.cloudsmith_checker.outputs.tokenPresent }}
+  HasCloudsmithAPIKey:
+    description: "If $CLOUDSMITH_API_KEY set, 'true', otherwise 'false'"
+    value: ${{ steps.cloudsmith_checker.outputs.APIKeyPresent }}
   MainMatrix:
     description: The GitHub Actions job matrix
     value: ${{ steps.data_matrix_normalizer.outputs.matrix }}
@@ -39,19 +39,19 @@ runs:
       querybuild --pretty --format yaml github_main_matrix
       echo ::endgroup::
 
-  - name: Check for Cloudsmith auth token in GitHub secrets storage
+  - name: Check for Cloudsmith API key in GitHub secrets storage
     id: cloudsmith_checker
     env:
-      CLOUDSMITH_TOKEN: ${{ inputs.CloudsmithToken }}
+      CLOUDSMITH_API_KEY: ${{ inputs.cloudsmithAPIKey }}
     shell: bash -e {0}
     run: |
-      if ! [ -z "$CLOUDSMITH_TOKEN" ]
+      if ! [ -z "$CLOUDSMITH_API_KEY" ]
       then
-        printf "%b" "Cloudsmith.io auth token found; upload enabled\n"
-        echo "::set-output name=tokenPresent::true"
+        printf "%b" "Cloudsmith.io API key found; upload enabled\n"
+        echo "::set-output name=APIKeyPresent::true"
       else
-        printf "%b" "Cloudsmith.io auth token not found; upload disabled\n"
-        echo "::set-output name=tokenPresent::false"
+        printf "%b" "Cloudsmith.io API key not found; upload disabled\n"
+        echo "::set-output name=APIKeyPresent::false"
       fi
 
   - name: Export timestamp of workflow run in seconds since epoch

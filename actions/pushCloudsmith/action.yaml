@@ -1,7 +1,7 @@
 name: Push built packages to Cloudsmith
 inputs:
-  cloudsmithToken:
-    descsription: Secret Cloudsmith auth token
+  cloudsmithAPIKey:
+    descsription: Secret Cloudsmith API key
     required: true
   artifactDirectory:
     description: Directory containing package artifacts
@@ -17,7 +17,7 @@ runs:
 
   - name: Upload packages to Cloudsmith
     env:
-      CLOUDSMITH_API_KEY: ${{ inputs.cloudsmithtoken }}
+      CLOUDSMITH_API_KEY: ${{ inputs.cloudsmithAPIKey }}
       ARTIFACT_DIRECTORY: ${{ inputs.artifactDirectory }}
     shell: /bin/bash -ex {0}
     run: cloudsmithupload  --package-directory $ARTIFACT_DIRECTORY

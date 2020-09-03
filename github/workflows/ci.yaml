@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       GithubRegistryURL: ${{ steps.build_inputs.outputs.GithubRegistryURL }}
-      HasCloudsmithToken: ${{ steps.build_inputs.outputs.HasCloudsmithToken }}
+      HasCloudsmithAPIKey: ${{ steps.build_inputs.outputs.HasCloudsmithAPIKey }}
       MainMatrix: ${{ steps.build_inputs.outputs.MainMatrix }}
       Timestamp: ${{ steps.build_inputs.outputs.Timestamp }}
 
@@ -36,7 +36,7 @@ jobs:
       id: build_inputs
       uses: zultron/machinekit_ci/actions/prepareState@v1
       with:
-        CloudsmithToken: ${{ secrets.CLOUDSMITH_TOKEN }}
+        CloudsmithAPIKey: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   ######################################################################################
   buildPackages:
@@ -102,7 +102,7 @@ jobs:
     name: Push packages to Cloudsmith
     runs-on: ubuntu-latest
     if: >
-      needs.prepareState.outputs.HasCloudsmithToken == 'true' &&
+      needs.prepareState.outputs.HasCloudsmithAPIKey == 'true' &&
       github.event_name == 'push'
     needs: [prepareState, buildPackages]
 
@@ -126,5 +126,5 @@ jobs:
       - name: Upload packages to Cloudsmith
         uses: zultron/machinekit_ci/actions/pushCloudsmith@v1
         with:
-          cloudsmithToken: ${{ secrets.CLOUDSMITH_TOKEN }}
+          cloudsmithAPIKey: ${{ secrets.CLOUDSMITH_API_KEY }}
           artifactDirectory: ./artifacts
