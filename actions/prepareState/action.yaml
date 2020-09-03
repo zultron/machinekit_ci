@@ -25,7 +25,9 @@ runs:
     env:
       GITHUB_CONTEXT: ${{ toJson(github) }}
     run: |
+      echo ::group::Show GitHub context
       echo "$GITHUB_CONTEXT"
+      echo ::endgroup::
 
   - name: Prepare matrix from JSON
     id: data_matrix_normalizer
@@ -33,8 +35,9 @@ runs:
     run: |
       printf "::set-output name=matrix::%s\n" \
           "$(querybuild github_main_matrix)"
-      printf "JSON object for Main Matrix:\n====\n%s\n" \
-          "$(querybuild --pretty github_main_matrix)"
+      echo ::group::Show main matrix
+      querybuild --pretty --format yaml github_main_matrix
+      echo ::endgroup::
 
   - name: Check for Cloudsmith auth token in GitHub secrets storage
     id: cloudsmith_checker
