@@ -79,15 +79,25 @@ runs:
       DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
       GNUPGHOME: /tmp/secrets_mountpoint
       PACKAGE_SIGNING_KEY: ${{ inputs.packageSigningKey }}
-      PACKAGE_SIGNING_KEY_ID: ${{ inputs.packageSigningKeyID }}
-      SIGN_PACKAGES: ${{ inputs.signPackages }}
+      SIGN_PACKAGES: ${{ github.event_name == 'push' }}
     shell: bash
     run: |
       set -e
       if test $SIGN_PACKAGES != true; then
-          echo "Not signing packages"
+          echo "Not signing packages:  Not a Github 'push' event"
           exit 0
       fi
+      if test -z "PACKAGE_SIGNING_KEY"; then
+          echo "Not signing packages:  No PACKAGE_SIGNING_KEY secret"
+          exit 0
+      fi
+
+      echo ::group::Extracting GPG signing key ID from environment
+          export PACKAGE_SIGNING_KEY_ID=$(buildpackages \
+              --print-gpg-keyid-from-secret-env-var PACKAGE_SIGNING_KEY)
+          echo "::set-env name=PACKAGE_SIGNING_KEY_ID::$PACKAGE_SIGNING_KEY_ID
+      echo ::endgroup::
+      echo "Set PACKAGE_SIGNING_KEY_ID=$PACKAGE_SIGNING_KEY_ID
 
       echo ::group::Creating tmpfs for $GNUPGHOME
       mkdir -p $GNUPGHOME
@@ -117,9 +127,6 @@ runs:
     env:
       CODENAME: ${{ inputs.codename }}
       ARCHITECTURE: ${{ inputs.architecture }}
-      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
-      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
-      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
       UPLOAD_DIRECTORY: ${{ inputs.uploadDirectory }}
     shell: bash
     run: |

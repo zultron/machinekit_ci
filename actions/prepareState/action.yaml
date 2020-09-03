@@ -4,12 +4,6 @@ inputs:
   CloudsmithToken:
     description:  Secret Cloudsmith token
     required: false
-  PackageSigningKey:
-    description:  Secret GPG package signing key
-    required: false
-  PackageSigningKeyID:
-    description:  GPG package signing key ID
-    required: false
 outputs:
   GithubRegistryURL:
     description:  GitHub registry URL
@@ -17,11 +11,6 @@ outputs:
   HasCloudsmithToken:
     description: "If $CLOUDSMITH_TOKEN set, 'true', otherwise 'false'"
     value: ${{ steps.cloudsmith_checker.outputs.tokenPresent }}
-  HasSigningKey:
-    description: >-
-      If $PACKAGE_SIGNING_KEY and $PACKAGE_SIGNING_KEY_ID set, 'true',
-      otherwise 'false'
-    value: ${{ steps.signing_key_checker.outputs.keyPresent }}
   MainMatrix:
     description: The GitHub Actions job matrix
     value: ${{ steps.data_matrix_normalizer.outputs.matrix }}
@@ -60,23 +49,6 @@ runs:
       else
         printf "%b" "Cloudsmith.io auth token not found; upload disabled\n"
         echo "::set-output name=tokenPresent::false"
-      fi
-
-  - name: Check for signing key in GitHub secrets storage
-    # gpg --export-secret-keys --armor $KEYID
-    id: signing_key_checker
-    env:
-      PACKAGE_SIGNING_KEY: ${{ inputs.PackageSigningKey }}
-      PACKAGE_SIGNING_KEY_ID: ${{ inputs.PackageSigningKeyID }}
-    shell: bash -e {0}
-    run: |
-      if [ -n "$PACKAGE_SIGNING_KEY" -a -n "$PACKAGE_SIGNING_KEY_ID" ]
-      then
-        printf "Signing key found; signing enabled\n"
-        echo "::set-output name=keyPresent::true"
-      else
-        printf "Signing key not found; signing disabled\n"
-        echo "::set-output name=keyPresent::false"
       fi
 
   - name: Export timestamp of workflow run in seconds since epoch

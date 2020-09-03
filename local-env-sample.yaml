@@ -1,5 +1,7 @@
 # Copy this file to .github/local-env.yaml to set custom environment
 # variables normally set in CI for running in a local environment
+#
+# DO NOT COMMIT THIS TO GIT.  It stores sensitive secrets.
 
 # GitHub user/organization and repository name
 DOCKER_REGISTRY_USER: my_github_id
@@ -15,7 +17,8 @@ DOCKER_REGISTRY_USER: my_github_id
 # more secure way to set this environment variable.
 #DOCKER_REGISTRY_PASSWORD: adc83b19e793491b1c6ea0fd8b46cd9f32e592fc
 
-# Package settings
+# Package signing settings
+# - ID of secret key to sign packages with
 PACKAGE_SIGNING_KEY_ID: DEADBEEF
 # - Optionally set $GNUPGHOME if not ~/.gnupg
 #GNUPGHOME: tmp/gnupg

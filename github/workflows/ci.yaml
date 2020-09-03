@@ -17,7 +17,6 @@ jobs:
     outputs:
       GithubRegistryURL: ${{ steps.build_inputs.outputs.GithubRegistryURL }}
       HasCloudsmithToken: ${{ steps.build_inputs.outputs.HasCloudsmithToken }}
-      HasSigningKey: ${{ steps.build_inputs.outputs.HasSigningKey }}
       MainMatrix: ${{ steps.build_inputs.outputs.MainMatrix }}
       Timestamp: ${{ steps.build_inputs.outputs.Timestamp }}
 
@@ -38,8 +37,6 @@ jobs:
       uses: zultron/machinekit_ci/actions/prepareState@v1
       with:
         CloudsmithToken: ${{ secrets.CLOUDSMITH_TOKEN }}
-        PackageSigningKey: ${{ secrets.PACKAGE_SIGNING_KEY }}
-        PackageSigningKeyID: ${{ secrets.PACKAGE_SIGNING_KEY_ID }}
 
   ######################################################################################
   buildPackages:
@@ -83,11 +80,7 @@ jobs:
         dockerRegistryURL: ${{ needs.prepareState.outputs.GithubRegistryURL }}
         dockerRegistryRepo: ${{ github.event.repository.name }}
         dockerRegistryUser: ${{ github.actor }}
-        signPackages: >-
-          ${{ github.event_name == 'push' &&
-          needs.prepareState.outputs.HasSigningKey == 'true' }}
         packageSigningKey: ${{ secrets.PACKAGE_SIGNING_KEY }}
-        packageSigningKeyID: ${{ secrets.PACKAGE_SIGNING_KEY_ID }}
         uploadDirectory: ${{ github.event.repository.name }}-${{ matrix.vendorLower }}
 
     - name: >

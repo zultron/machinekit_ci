@@ -145,6 +145,23 @@ class BuildPackages(helpers.DistroSettings):
                _err=sys.stderr.buffer,
                _cwd=self.normalized_path)
 
+    def extract_gpg_keyid_from_secret_env_var(self: object, env_var: str):
+        gpg_home = helpers.NormalizeSubdir(self.get_gpg_home())()
+        sys.stderr.write("GPG home:  {}\n".format(gpg_home))
+        secret = self.env(env_var)
+        output = sh.gpg(
+            "-v", "--batch", "--import", "--import-options=show-only",
+            "--dry-run", "--with-colons", "-",
+            _in=secret,
+            _cwd=self.normalized_path)
+        for line in output:
+            if line.startswith('sec'):
+                fields = line.split(':')
+                return fields[4]
+
+    def print_gpg_keyid_from_secret_env_var(self: object, env_var: str):
+        print(self.extract_gpg_keyid_from_secret_env_var(env_var)
+
     def sign_packages(self: object):
         signing_key_id = self.env('PACKAGE_SIGNING_KEY_ID', False)
         sh.Command("dpkg-sig")(
@@ -204,6 +221,8 @@ class BuildPackages(helpers.DistroSettings):
                             help="Build packages")
         parser.add_argument("--import-gpg-from-secret-env-var",
                             help="Import a GPG secret key from the given environment variable")
+        parser.add_argument("--print-gpg-keyid-from-secret-env-var",
+                            help="Print GPG secret key ID from the given environment variable")
         parser.add_argument("--sign-packages",
                             action='store_true',
                             help="Sign packages")
@@ -229,6 +248,9 @@ class BuildPackages(helpers.DistroSettings):
             if args.import_gpg_from_secret_env_var:
                 buildpackages.import_gpg_from_secret_env_var(
                     args.import_gpg_from_secret_env_var)
+            if args.print_gpg_keyid_from_secret_env_var:
+                buildpackages.print_gpg_keyid_from_secret_env_var(
+                    args.print_gpg_keyid_from_secret_env_var)
             if args.sign_packages:
                 buildpackages.sign_packages()
             if args.list_packages:
