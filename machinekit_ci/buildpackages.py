@@ -160,7 +160,7 @@ class BuildPackages(helpers.DistroSettings):
                 return fields[4]
 
     def print_gpg_keyid_from_secret_env_var(self: object, env_var: str):
-        print(self.extract_gpg_keyid_from_secret_env_var(env_var)
+        print(self.extract_gpg_keyid_from_secret_env_var(env_var))
 
     def sign_packages(self: object):
         signing_key_id = self.env('PACKAGE_SIGNING_KEY_ID', False)

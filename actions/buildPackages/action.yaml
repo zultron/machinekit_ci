@@ -97,26 +97,35 @@ runs:
               --print-gpg-keyid-from-secret-env-var PACKAGE_SIGNING_KEY)
           echo "::set-env name=PACKAGE_SIGNING_KEY_ID::$PACKAGE_SIGNING_KEY_ID
       echo ::endgroup::
-      echo "Set PACKAGE_SIGNING_KEY_ID=$PACKAGE_SIGNING_KEY_ID
+      echo "Set PACKAGE_SIGNING_KEY_ID=$PACKAGE_SIGNING_KEY_ID"
 
       echo ::group::Creating tmpfs for $GNUPGHOME
-      mkdir -p $GNUPGHOME
-      MOUNT_OPTS="size=50m,mode=0700,uid=$(id -u),gid=$(id -g)"
-      sudo mount -t tmpfs -o $MOUNT_OPTS tmpfs $GNUPGHOME
+      (
+          set -x
+          mkdir -p $GNUPGHOME
+          MOUNT_OPTS="size=50m,mode=0700,uid=$(id -u),gid=$(id -g)"
+          sudo mount -t tmpfs -o $MOUNT_OPTS tmpfs $GNUPGHOME
+      )
       echo ::endgroup::
 
       echo ::group::Importing signing keys into $GNUPGHOME
-      rundocker --env PACKAGE_SIGNING_KEY --env GNUPGHOME \
-              --volume $GNUPGHOME \
-              $CODENAME $ARCHITECTURE \
-          buildpackages --import-gpg-from-secret-env-var PACKAGE_SIGNING_KEY
+      (
+          set -x
+          rundocker --env PACKAGE_SIGNING_KEY --env GNUPGHOME \
+                  --volume $GNUPGHOME \
+                  $CODENAME $ARCHITECTURE \
+              buildpackages --import-gpg-from-secret-env-var PACKAGE_SIGNING_KEY
+      )
       echo ::endgroup::
 
       echo ::group::Signing packages
-      rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
-              --volume $GNUPGHOME \
-              $CODENAME $ARCHITECTURE \
-          buildpackages --sign-packages
+      (
+          set -x
+          rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
+                  --volume $GNUPGHOME \
+                  $CODENAME $ARCHITECTURE \
+              buildpackages --sign-packages
+      )
       echo ::endgroup::
 
       echo ::group::Removing tmpfs for $GNUPGHOME
