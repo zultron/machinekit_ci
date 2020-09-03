@@ -139,13 +139,11 @@ class BuildPackages(helpers.DistroSettings):
         gpg_home = helpers.NormalizeSubdir(self.get_gpg_home())()
         sys.stderr.write("GPG home:  {}\n".format(gpg_home))
         secret = self.env(env_var)
-        with tempfile.NamedTemporaryFile(dir=gpg_home, mode='w') as f:
-            f.write(secret)
-            f.flush()
-            sh.gpg("-v", "--batch", "--import", f.name,
-                   _out=sys.stdout.buffer,
-                   _err=sys.stderr.buffer,
-                   _cwd=self.normalized_path)
+        sh.gpg("-v", "--batch", "--import", "-",
+               _in=secret,
+               _out=sys.stdout.buffer,
+               _err=sys.stderr.buffer,
+               _cwd=self.normalized_path)
 
     def sign_packages(self: object):
         signing_key_id = self.env('PACKAGE_SIGNING_KEY_ID', False)
