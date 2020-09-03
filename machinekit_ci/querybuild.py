@@ -32,10 +32,11 @@ class Query(helpers.DistroSettings):
             for c in self.distro_settings['allowedCombinations']
         }
         for k, v in self._matrix_dict.items():
-            # Add architecture and lower-case vendor
+            # Add architecture, lower-case vendor, artifact name
             v['architecture'] = k[0]
             v['vendorLower'] = v['vendor'].lower()
-
+            v['artifactNameBase'] = "{}-{}-{}-{}".format(
+                self.package, v['vendor'].lower(), v['release'], v['architecture'],)
 
     class _query_property:
         query_keys = dict()

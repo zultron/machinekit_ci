@@ -95,13 +95,12 @@ jobs:
         ${{ matrix.codename}}, ${{ matrix.architecture }}
       uses: actions/upload-artifact@v2
       env:
+        NAME_BASE: ${{ matrix.artifactNameBase }}
+        GITHUB_SHA: ${{ github.sha }}
         GITHUB_REPO: ${{ github.event.repository.name }}
-        VENDOR_LOWER: ${{ matrix.vendorLower }}
+        TIMESTAMP: ${{ needs.prepareState.outputs.Timestamp }}
       with:
-        name: >-
-          ${{ env.GITHUB_REPO }}-${{ env.VENDOR_LOWER }}-${{
-            matrix.release }}-${{ matrix.architecture }}-${{
-            github.sha }}-${{ needs.prepareState.outputs.Timestamp }}
+        name: ${{ env.NAME_BASE }}-${{ env.GITHUB_SHA }}-${{ env.TIMESTAMP }}
         path: ${{ github.event.repository.name }}-${{ matrix.vendorLower }}
         if-no-files-found: error
 
