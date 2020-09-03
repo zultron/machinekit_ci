@@ -39,19 +39,27 @@ runs:
       ENTRYPOINT: ${{ github.action_path }}/entrypoint
       CODENAME: ${{ inputs.codename }}
       ARCHITECTURE: ${{ inputs.architecture }}
-    shell: bash -xe {0}
+    shell: bash -e {0}
     run: |
+      echo ::group::Log into Docker
       printf $DOCKER_REGISTRY_PASSWORD | \
           docker login $DOCKER_REGISTRY_URL -u $DOCKER_REGISTRY_USER --password-stdin
+      echo ::endgroup::
 
-      echo "Attempting to pull cached image"
+      echo ::group::Attempt to pull cached image
       containerimage --pull ${CODENAME} ${ARCHITECTURE} && RES=0 || RES=$?
+      echo ::endgroup::
 
-      if test $RES != 0; then
+      if test $RES = 0; then
+          echo "Successfully pulled image for ${CODENAME} ${ARCHITECTURE}"
+      else
+          echo ::group::Build new image
           echo "Failed to pull image; building new image"
           containerimage --build ${CODENAME} ${ARCHITECTURE}
+          echo ::endgroup::
+          echo "Successfully built image for ${CODENAME} ${ARCHITECTURE}"
 
-          echo "Pushing built image"
+          echo ::group::Pushing newly-built image
           TRY=0; MAX_TRIES=5
           while test $((TRY++)) -lt ${MAX_TRIES}; do
             containerimage --push ${CODENAME} ${ARCHITECTURE}
@@ -59,5 +67,9 @@ runs:
             test $RES -ne 0 || break
             echo "Try $TRY exit status $RES; retrying"
           done
+          echo ::endgroup::
+          if test $RES = 0; then
+              echo "Successfully pushed image for ${CODENAME} ${ARCHITECTURE}"
+          fi
           exit ${RES}
       fi

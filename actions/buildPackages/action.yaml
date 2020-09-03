@@ -39,7 +39,7 @@ runs:
   - name: >
       Configure source package for ${{ inputs.vendor }}
       ${{ inputs.codename}}, ${{ inputs.architecture }}
-    shell: bash -xe {0}
+    shell: bash -e {0}
     env:
       CODENAME: ${{ inputs.codename }}
       ARCHITECTURE: ${{ inputs.architecture }}
@@ -47,13 +47,15 @@ runs:
       DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
       DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
     run: |
+      echo ::group::Configure source package
       rundocker $CODENAME $ARCHITECTURE \
           buildpackages --configure-source
+      echo ::endgroup::
 
   - name: >
       Build Debian packages for ${{ inputs.vendor }}
       ${{ inputs.codename}}, ${{ inputs.architecture }}
-    shell: bash -xe {0}
+    shell: bash -e {0}
     env:
       CODENAME: ${{ inputs.codename }}
       ARCHITECTURE: ${{ inputs.architecture }}
@@ -61,8 +63,10 @@ runs:
       DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
       DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
     run: |
+      echo ::group::Build debian packages for $CODENAME $ARCHITECTURE
       rundocker $CODENAME $ARCHITECTURE \
           buildpackages --build-packages
+      echo ::endgroup::
 
   - name: Sign packages with Signer Key
     env:
@@ -75,29 +79,36 @@ runs:
       PACKAGE_SIGNING_KEY: ${{ inputs.packageSigningKey }}
       PACKAGE_SIGNING_KEY_ID: ${{ inputs.packageSigningKeyID }}
       SIGN_PACKAGES: ${{ inputs.signPackages }}
-    shell: bash -xe {0}
+    shell: bash -e {0}
     run: |
-      test $SIGN_PACKAGES == true || exit 0
+      if test $SIGN_PACKAGES != true; then
+          echo "Not signing packages"
+          exit 0
+      fi
 
-      # Create tmpfs for $GNUPGHOME
+      echo ::group::Creating tmpfs for $GNUPGHOME
       mkdir -p $GNUPGHOME
       MOUNT_OPTS="size=50m,mode=0700,uid=$(id -u),gid=$(id -g)"
       sudo mount -t tmpfs -o $MOUNT_OPTS tmpfs $GNUPGHOME
+      echo ::endgroup::
 
-      # Import signing keys into $GNUPGHOME
+      echo ::group::Importing signing keys into $GNUPGHOME
       rundocker --env PACKAGE_SIGNING_KEY --env GNUPGHOME \
               --volume $GNUPGHOME \
               $CODENAME $ARCHITECTURE \
           buildpackages --import-gpg-from-secret-env-var PACKAGE_SIGNING_KEY
+      echo ::endgroup::
 
-      # Sign packages with signing keys
+      echo ::group::Signing packages
       rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
               --volume $GNUPGHOME \
               $CODENAME $ARCHITECTURE \
           buildpackages --sign-packages
+      echo ::endgroup::
 
-      # Remove tmpfs for $GNUPGHOME
+      echo ::group::Removing tmpfs for $GNUPGHOME
       sudo umount $GNUPGHOME
+      echo ::endgroup::
 
   - name: Prepare build artifact for upload
     env:
@@ -107,10 +118,12 @@ runs:
       DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
       DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
       UPLOAD_DIRECTORY: ${{ inputs.uploadDirectory }}
-    shell: bash -xe {0}
+    shell: bash -e {0}
     run: |
+      echo ::group::Preparing build artifacts for upload
       mkdir $UPLOAD_DIRECTORY
       rundocker --notty $CODENAME $ARCHITECTURE \
           buildpackages --list-packages --with-buildinfo --with-changes \
           | xargs -t -I '{}' cp -v '{}' \
             $UPLOAD_DIRECTORY
+      echo ::endgroup::
