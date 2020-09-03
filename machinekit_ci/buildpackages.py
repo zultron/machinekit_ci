@@ -149,15 +149,13 @@ class BuildPackages(helpers.DistroSettings):
 
     def sign_packages(self: object):
         signing_key_id = self.env('PACKAGE_SIGNING_KEY_ID', False)
-
-        source_parent_dir = os.path.join(self.source_dir, '..')
         sh.Command("dpkg-sig")(
             "--sign", "builder", "-v", "-k",
             signing_key_id,
             self.changes_file_path,
             _out=sys.stdout.buffer,
             _err=sys.stderr.buffer,
-            _cwd=source_parent_dir)
+            _cwd=self.source_parent_dir)
 
     def get_package_list(self: object):
         with open(self.changes_file_path, 'r') as f:

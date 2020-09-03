@@ -25,11 +25,9 @@ class RunDocker(helpers.DistroSettings):
             self.docker_args += [
                 "--rm",
                 "--user={}:{}".format(os.getuid(), os.getgid()),
-                # Mount parent directory also
-                "--volume={}:/home/machinekit/build".format(self.parent_dir),
-                # Mount git source in standard location
-                "--volume={}:/home/machinekit/build/git_repo".format(self.normalized_path),
-                "--workdir=/home/machinekit/build/git_repo",
+                # Mount parent directory where package results will be built
+                "--volume={0}:{0}".format(self.parent_dir),
+                "--workdir={}".format(self.normalized_path),
                 "--hostname={}_{}".format(self.os_codename, self.architecture),
                 ]
         # print("path: {}".format(self.path))
