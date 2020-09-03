@@ -118,7 +118,7 @@ RUN apt-get update          \
     apt-get clean
 
 # Bump this number to force cloning the below repos anew
-RUN echo 2
+RUN echo 3
 
 RUN cd /tmp && \
     git clone https://github.com/zultron/docker-registry-client && \

@@ -92,25 +92,30 @@ runs:
           exit 0
       fi
 
-      echo ::group::Extracting GPG signing key ID from environment
-          export PACKAGE_SIGNING_KEY_ID=$(buildpackages \
-              --print-gpg-keyid-from-secret-env-var PACKAGE_SIGNING_KEY)
-          echo "::set-env name=PACKAGE_SIGNING_KEY_ID::$PACKAGE_SIGNING_KEY_ID
-      echo ::endgroup::
-      echo "Set PACKAGE_SIGNING_KEY_ID=$PACKAGE_SIGNING_KEY_ID"
-
       echo ::group::Creating tmpfs for $GNUPGHOME
       (
-          set -x
+          set -ex
           mkdir -p $GNUPGHOME
           MOUNT_OPTS="size=50m,mode=0700,uid=$(id -u),gid=$(id -g)"
           sudo mount -t tmpfs -o $MOUNT_OPTS tmpfs $GNUPGHOME
       )
       echo ::endgroup::
 
+      # Doesn't work on Stretch; anyway, buildpackages --sign-packages finds the key
+      # echo ::group::Extracting GPG signing key ID from environment
+      # export PACKAGE_SIGNING_KEY_ID=$(
+      #     rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY \
+      #             --volume $GNUPGHOME \
+      #             $CODENAME $ARCHITECTURE \
+      #         buildpackages \
+      #             --print-gpg-keyid-from-secret-env-var PACKAGE_SIGNING_KEY \
+      # )
+      # echo ::endgroup::
+      # echo "Set PACKAGE_SIGNING_KEY_ID=$PACKAGE_SIGNING_KEY_ID"
+
       echo ::group::Importing signing keys into $GNUPGHOME
       (
-          set -x
+          set -ex
           rundocker --env PACKAGE_SIGNING_KEY --env GNUPGHOME \
                   --volume $GNUPGHOME \
                   $CODENAME $ARCHITECTURE \
@@ -120,7 +125,7 @@ runs:
 
       echo ::group::Signing packages
       (
-          set -x
+          set -ex
           rundocker --env GNUPGHOME --env PACKAGE_SIGNING_KEY_ID \
                   --volume $GNUPGHOME \
                   $CODENAME $ARCHITECTURE \
@@ -129,7 +134,10 @@ runs:
       echo ::endgroup::
 
       echo ::group::Removing tmpfs for $GNUPGHOME
-      sudo umount $GNUPGHOME
+      (
+          set -x
+          sudo umount $GNUPGHOME
+      )
       echo ::endgroup::
 
   - name: Prepare build artifact for upload
@@ -137,6 +145,9 @@ runs:
       CODENAME: ${{ inputs.codename }}
       ARCHITECTURE: ${{ inputs.architecture }}
       UPLOAD_DIRECTORY: ${{ inputs.uploadDirectory }}
+      DOCKER_REGISTRY_URL: ${{ inputs.dockerRegistryURL }}
+      DOCKER_REGISTRY_REPO: ${{ inputs.dockerRegistryRepo }}
+      DOCKER_REGISTRY_USER: ${{ inputs.dockerRegistryUser }}
     shell: bash
     run: |
       set -e
