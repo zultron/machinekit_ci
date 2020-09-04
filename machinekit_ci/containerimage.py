@@ -264,7 +264,7 @@ class BuildContainerImage(helpers.DistroSettings):
             if sys.stdout.isatty():
                 sh_kwargs = dict(_fg = True)
             else:
-                sh_kwargs = dict(_out = sys.stdout.buffer, _in = sys.stderr.buffer)
+                sh_kwargs = dict(_out = sys.stdout.buffer, _err = sys.stderr.buffer)
             sh_kwargs.update(dict(_cwd=context_dir))
 
             # Show `docker build` command and list build context files
