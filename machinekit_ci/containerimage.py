@@ -116,14 +116,23 @@ class BuildContainerImage(helpers.DistroSettings):
             return self._entrypoint_path
         return pkg_resources.resource_filename(__name__, 'entrypoint')
 
+    def check_path_in_git(self: object, path: str):
+        try:
+            sh.git("cat-file", "-e", "HEAD:{}".format(path),
+                   _cwd = self.normalized_path)
+            return True
+        except:
+            return False
+
     def docker_context_cm(self: object):
         """Create a pristine Docker context from git archive of the .github/docker and
         debian directories, adding Dockerfile and entrypoint from GH Action
         directory, and yield this as a context manager
         """
-        want_paths = [self.debian_dir+'/', ".github/docker/"]
-        git_paths = [p for p in want_paths if os.path.exists(p)]
+        want_paths = [self.debian_dir, ".github/docker"]
+        git_paths = [p for p in want_paths if self.check_path_in_git(p)]
         with tempfile.TemporaryDirectory(prefix='mk-ci-tmp-context-') as context_dir:
+            # Copy .github/docker and debian dir from git
             sh.tar(
                 sh.git.archive(
                     "--format=tar", "HEAD", "--", *git_paths,
@@ -132,6 +141,12 @@ class BuildContainerImage(helpers.DistroSettings):
                 "xvf", "-",
                 _err=sys.stderr.buffer,
                 _cwd=context_dir)
+            # Be sure debian dir exists in context or docker build will fail
+            for path in want_paths:
+                context_dir_path = os.path.join(context_dir, path)
+                if not os.path.exists(context_dir_path):
+                    os.makedirs(context_dir_path, exist_ok=True)
+            # Copy Dockerfile and entrypoint
             for src in (self.dockerfile_path, self.entrypoint_path):
                 fname = os.path.basename(src)
                 dest = os.path.join(context_dir, fname)
@@ -148,17 +163,6 @@ class BuildContainerImage(helpers.DistroSettings):
                     shutil.copyfile(path, os.path.join(context_files_dir, path))
                 else:
                     shutil.copytree(path, context_files_dir)
-            for path in want_paths: # Docker COPY fails without
-                if os.path.exists(path):
-                    continue
-                path = os.path.join(context_dir, path)
-                if path.endswith('/'):
-                    os.mkdir(path)
-                else:
-                    try:
-                        open(path, 'x')
-                    except FileExistsError:
-                        pass
             yield context_dir
 
     def generate_image_hash(self):
@@ -199,15 +203,9 @@ class BuildContainerImage(helpers.DistroSettings):
             self.label_prefix, name, value))
 
     def list_directory(self: object, path: str, ls_opts=['-l'], to_stderr=False):
-        sh_xargs_kwargs = dict(
-            _out = sys.stderr.buffer if to_stderr else sys.stderr.buffer,
-            _in = sys.stderr.buffer,
-            _cwd = path,
-        )
-        sh.xargs(
-            sh.find('.', '-type', 'f',
-                    _cwd = path),
-            'ls', *ls_opts, **sh_xargs_kwargs)
+        sh.find('.', _cwd = path,
+                _out = sys.stderr.buffer if to_stderr else sys.stderr.buffer,
+                _err = sys.stderr.buffer)
 
     def build_image(self: object, target=None, dry_run=False) -> None:
         if any(tested is None for tested in [self.base_image,
