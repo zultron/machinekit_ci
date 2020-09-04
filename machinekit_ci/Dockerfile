@@ -243,6 +243,7 @@ FROM machinekit_builder_base_arch \
 ARG DEBIAN_DIR=debian/
 COPY ${DEBIAN_DIR} /tmp/debian/
 COPY .github/docker /tmp/.github/docker
+COPY files /tmp/files
 
 ARG SCRIPT_PRE_CMD
 RUN if test -n "${SCRIPT_PRE_CMD}"; then \

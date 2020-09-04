@@ -121,9 +121,8 @@ class BuildContainerImage(helpers.DistroSettings):
         debian directories, adding Dockerfile and entrypoint from GH Action
         directory, and yield this as a context manager
         """
-        git_paths = [self.debian_dir]
-        if os.path.exists(".github/docker"):
-            git_paths.append(".github/docker")
+        want_paths = [self.debian_dir+'/', ".github/docker/"]
+        git_paths = [p for p in want_paths if os.path.exists(p)]
         with tempfile.TemporaryDirectory(prefix='mk-ci-tmp-context-') as context_dir:
             sh.tar(
                 sh.git.archive(
@@ -138,10 +137,28 @@ class BuildContainerImage(helpers.DistroSettings):
                 dest = os.path.join(context_dir, fname)
                 shutil.copyfile(src, dest)
                 shutil.copymode(src, dest)
-            for i in (".github", ".github/docker"): # Docker COPY fails withot
-                path = os.path.join(context_dir, i)
-                if not os.path.exists(path):
+            # User-specified files in dockerBuildContextFiles YAML key
+            context_files_dir = os.path.join(context_dir, "files")
+            os.makedirs(context_files_dir)
+            for path in self.docker_build_context_files:
+                dirname = os.path.dirname(path)
+                if dirname:
+                    os.makedirs(os.path.join(context_files_dir, dirname), exist_ok=True)
+                if os.path.isfile(path):
+                    shutil.copyfile(path, os.path.join(context_files_dir, path))
+                else:
+                    shutil.copytree(path, context_files_dir)
+            for path in want_paths: # Docker COPY fails without
+                if os.path.exists(path):
+                    continue
+                path = os.path.join(context_dir, path)
+                if path.endswith('/'):
                     os.mkdir(path)
+                else:
+                    try:
+                        open(path, 'x')
+                    except FileExistsError:
+                        pass
             yield context_dir
 
     def generate_image_hash(self):

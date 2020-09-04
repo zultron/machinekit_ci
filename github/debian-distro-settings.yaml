@@ -16,6 +16,10 @@ scriptPostCmd: .github/docker/mypackage_script_post.sh
 #    (default: none)
 configureSourceCmd: .github/docker/mypackage_configure_source.sh
 
+# Files to copy into Docker build context "files" directory
+dockerBuildContextFiles:
+  - dir1/file1.ext
+
 # Non-standard package subdirectory (default: `.`)
 #sourceDir: some_subdir
 

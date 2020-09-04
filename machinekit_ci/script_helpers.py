@@ -194,6 +194,11 @@ class DistroSettings(object):
             self.normalized_path, self.distro_settings.get('docker_context_path','.'))
 
     @property
+    def docker_build_context_files(self):
+        # Files to copy into Docker build context
+        return self.distro_settings.get('dockerBuildContextFiles',[])
+
+    @property
     def source_dir(self):
         # Path to package sources; usually the same as self.normalized_path, but
         # can be a subdirectory
@@ -217,7 +222,7 @@ class DistroSettings(object):
 
     @property
     def configure_src_cmd(self):
-        # Command to run to configure soruce tree before package build
+        # Command to run to configure source tree before package build
         return self.distro_settings.get('configureSourceCmd',None)
 
     @property
