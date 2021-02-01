@@ -50,16 +50,20 @@ class CloudsmithUploader(helpers.DistroSettings):
     @property
     def repo(self: object):
         if self._cache_get('repo', None) is None:
-            repos_json = sh.cloudsmith.list.repos('--output-format=json', _tty_out=False)
+            repos_json = sh.cloudsmith.list.repos(
+                '--output-format=json', _tty_out=False)
             repos = json.loads(str(repos_json))
             for repo in repos['data']:
-                if repo['namespace'] == self.namespace and repo['slug'] == self.repo_slug:
+                if (repo['namespace'] == self.namespace
+                    and repo['slug'] == self.repo_slug):
                     break
             else:
-                raise ValueError("No Cloudsmith repo found in {} namespace with {} slug".format(
-                    self.namespace, self.repo_slug))
-            sys.stderr.write("Found Cloudsmith repo, namespace {}, slug {}\n".format(
-                    self.namespace, self.repo_slug))
+                raise ValueError(
+                    f"No Cloudsmith repo found in {self.namespace} "
+                    f"namespace with {self.repo_slug} slug")
+            sys.stderr.write(
+                f"Found Cloudsmith repo, namespace {self.namespace}, "
+                f"slug {self.repo_slug}\n")
             return self._cache_set('repo', repo)
         return self._cache.get('repo')
 
@@ -78,7 +82,7 @@ class CloudsmithUploader(helpers.DistroSettings):
         match = self.ordr_regex.match(topdir)
         distro = match.group(1)
         release = match.group(2)
-        return '{}/{}/{}/{}'.format(self.namespace, self.repo_slug, distro, release)
+        return f'{self.namespace}/{self.repo_slug}/{distro}/{release}'
 
     def upload_packages(self: object, dry_run=False):
         for dirname, fname in self.walk_package_directory():
@@ -111,7 +115,7 @@ class CloudsmithUploader(helpers.DistroSettings):
                             help="Directory containing packages")
         parser.add_argument("--dry-run",
                             action="store_true",
-                            help="Show what would be done, but don't do anything")
+                            help="Show what would be done, but do nothing")
 
         args = parser.parse_args()
 
