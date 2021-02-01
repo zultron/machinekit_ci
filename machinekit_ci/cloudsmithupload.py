@@ -40,12 +40,21 @@ class CloudsmithUploader(helpers.DistroSettings):
     @property
     def namespace(self: object):
         if self._cache_get('namespace', None) is None:
-            whoami_text = sh.cloudsmith.whoami(_tty_out=False)
-            whoami_match = self.cloudsmith_whoami_regex.search(str(whoami_text))
-            namespace = whoami_match.group(1)
-            sys.stderr.write('Discovered Cloudsmith namespace {}\n'.format(namespace))
-            return self._cache_set('namespace', namespace)
-        return self._cache_get('namespace')
+            namespace = os.environ.get("CLOUDSMITH_NAMESPACE", None)
+            if namespace:
+                sys.stderr.write(
+                    f'Cloudsmith namespace "{namespace}" from environment\n')
+                return self._cache_set('namespace', namespace)
+            namespace = self.distro_settings.get('cloudsmith_repo_namespace', None)
+            if namespace:
+                sys.stderr.write(
+                    f'Cloudsmith namespace "{namespace}" from config\n')
+                return self._cache_set('namespace', namespace)
+            raise RuntimeError(
+                'Cloudsmith namespace not set in "$CLOUDSMITH_NAMESPACE" env '
+                'or in "cloudsmith_namespace" config key')
+        else:
+            return self._cache_get('namespace')
 
     @property
     def repo(self: object):

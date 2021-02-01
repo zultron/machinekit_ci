@@ -40,6 +40,8 @@ dockerBuildContextFiles:
 # Docker image label prefix (default: `io.machinekit.${{package}}`)
 #label_prefix: io.machinekit.mypackage
 
+# Cloudsmith repo namespace (org name); also may be set in $CLOUDSMITH_NAMESPACE
+#cloudsmith_repo_namespace: myorg
 # Cloudsmith repo slug, if not the same as `package`
 #cloudsmith_repo_slug: mypackage
 
