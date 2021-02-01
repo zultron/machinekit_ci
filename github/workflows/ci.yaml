@@ -30,11 +30,11 @@ jobs:
         python-version: '3.8'
 
     - name: Install script dependencies
-      uses: zultron/machinekit_ci/actions/initDeps@v1
+      uses: zultron/machinekit_ci/actions/initDeps@v2
 
     - name: Prepare build inputs
       id: build_inputs
-      uses: zultron/machinekit_ci/actions/prepareState@v1
+      uses: zultron/machinekit_ci/actions/prepareState@v2
       with:
         CloudsmithAPIKey: ${{ secrets.CLOUDSMITH_API_KEY }}
 
@@ -58,11 +58,11 @@ jobs:
         python-version: '3.8'
 
     - name: Install script dependencies
-      uses: zultron/machinekit_ci/actions/initDeps@v1
+      uses: zultron/machinekit_ci/actions/initDeps@v2
 
     - name: Pull or build Docker image
       id: docker_image
-      uses: zultron/machinekit_ci/actions/dockerImage@v1
+      uses: zultron/machinekit_ci/actions/dockerImage@v2
       with:
         codename: ${{ matrix.codename }}
         architecture: ${{ matrix.architecture }}
@@ -73,7 +73,7 @@ jobs:
 
     - name: Build and sign packages
       id: build_packages
-      uses: zultron/machinekit_ci/actions/buildPackages@v1
+      uses: zultron/machinekit_ci/actions/buildPackages@v2
       with:
         codename: ${{ matrix.codename }}
         architecture: ${{ matrix.architecture }}
@@ -116,7 +116,7 @@ jobs:
           python-version: '3.8'
 
       - name: Install script dependencies
-        uses: zultron/machinekit_ci/actions/initDeps@v1
+        uses: zultron/machinekit_ci/actions/initDeps@v2
 
       - name: Download all built artifacts from GitHub storage
         uses: actions/download-artifact@v2
@@ -124,7 +124,7 @@ jobs:
           path: ./artifacts
 
       - name: Upload packages to Cloudsmith
-        uses: zultron/machinekit_ci/actions/pushCloudsmith@v1
+        uses: zultron/machinekit_ci/actions/pushCloudsmith@v2
         with:
           cloudsmithAPIKey: ${{ secrets.CLOUDSMITH_API_KEY }}
           artifactDirectory: ./artifacts
