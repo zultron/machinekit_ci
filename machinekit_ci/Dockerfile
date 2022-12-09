@@ -86,17 +86,13 @@ RUN addgroup --gid 1000 ${USER} &&                            \
 RUN apt-get update &&        \
     apt-get install -y       \
         sudo                 \
-        machinekit-fixuid    \
     && \
     apt-get clean
 
 ARG ENTRYPOINT=actions/dockerImage/entrypoint
 COPY ${ENTRYPOINT} /opt/bin/entrypoint
 
-RUN mkdir /opt/environment &&                                     \
-    echo "${USER} ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-    mkdir -p /etc/fixuid &&                                       \
-    printf "user: ${USER}\ngroup: ${USER}\n" > /etc/fixuid/config.yml
+RUN echo "${USER} ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ENTRYPOINT [ "/opt/bin/entrypoint" ]
 
@@ -140,15 +136,15 @@ FROM machinekit_builder_base AS machinekit_builder_base_arch
 
 ARG ARCHITECTURE
 ENV ARCHITECTURE=${ARCHITECTURE}
+ENV IN_MACHINEKIT_BUILDER=1
 
-RUN if ! dpkg-architecture -e${ARCHITECTURE};    \
-    then                                              \
+RUN if ! dpkg-architecture -e${ARCHITECTURE}; then \
         dpkg --add-architecture ${ARCHITECTURE}; \
     fi
 
 # Ubuntu ports repos for cross-building
 RUN if test $(source /etc/os-release; echo $ID) = ubuntu \
-            -a ${ARCHITECTURE} != amd64 \
+        -a ${ARCHITECTURE} != amd64 \
 	    -a ${ARCHITECTURE} != i386; then \
 	CODENAME=$(source /etc/os-release; echo $VERSION_CODENAME) && \
 	sed </etc/apt/sources.list \
@@ -163,64 +159,8 @@ RUN if test $(source /etc/os-release; echo $ID) = ubuntu \
         cat /etc/apt/sources.list; \
     fi
 
-# Non-standard exception, using the non-standard crossbuild-essential-i386:amd64
-# package in Machinekit/Machinekit Cloudsmith repository
-RUN if [[ "$(dpkg --print-architecture)" == "amd64" &&                    \
-          "$ARCHITECTURE" == "i386" &&                               \
-          "$(lsb_release -cs)" == "stretch" ]];                           \
-    then                                                                  \
-        apt-get install -y                                                \
-            gcc-multilib                                                  \
-            g++-multilib &&                                               \
-        apt-get clean &&                                                  \
-        ln -s x86_64-linux-gnu-objcopy /usr/bin/i686-linux-gnu-objcopy && \
-        ln -s x86_64-linux-gnu-objdump /usr/bin/i686-linux-gnu-objdump && \
-        ln -s x86_64-linux-gnu-strip /usr/bin/i686-linux-gnu-strip;       \
-    fi
+COPY environment.sh /usr/share/machinekit_ci/environment.sh
 
-RUN if [[ "$(dpkg --print-architecture)" == "amd64" && \
-          "$ARCHITECTURE" == "i386" &&            \
-          "$(lsb_release -cs)" == "stretch" ]];        \
-    then                                               \
-        printf "%b"                                    \
-               "#!/bin/bash\n"                         \
-               "export CC=\"gcc -m32\"\n"              \
-               "export CXX=\"g++ -m32\"\n"             \
-               "export LDEMULATION=\"elf_i386\"\n"     \
-               > /opt/environment/compiler.sh;                        \
-    else                                                              \
-        printf "%b"                                                   \
-               "#!/bin/bash\n"                                        \
-               "export CC=$(dpkg-architecture -a${ARCHITECTURE}  \
-                            -qDEB_HOST_GNU_TYPE)-gcc\n"               \
-               "export CXX=$(dpkg-architecture -a${ARCHITECTURE} \
-                            -qDEB_HOST_GNU_TYPE)-g++\n"               \
-               > /opt/environment/compiler.sh;                        \
-    fi
-
-RUN printf "%b"                                               \
-           "#!/bin/bash\n"                                    \
-           "set -a\n"                                         \
-           "$(dpkg-architecture -a${ARCHITECTURE} -s)\n" \
-           "set +a\n"                                         \
-           > /opt/environment/dpkg-architecture.sh
-
-# This on Debian 9 Stretch, ARCHITECTURE i386 actually abuses the fact
-# that the i686-linux-gnu-gcc does not exists (the $CC is set to 'gcc -m32'),
-# so the comparison will fail and '-Werror' will be exported - what is the
-# end result we want on Stretch anyway
-RUN if ! [[ $(echo -e "$($(dpkg-architecture -a${ARCHITECTURE}     \
-                           -qDEB_HOST_GNU_TYPE)-gcc -dumpversion)\n8" | \
-            sort -V | head -n1) == "8" ]];                              \
-    then                                                                \
-        printf "%b"                                                     \
-               "#!/bin/bash\n"                                          \
-               "export DPKG_CFLAGS=\"${DPKG_CFLAGS} -Werror\"\n"        \
-               > /opt/environment/dpkg_flags.sh;                        \
-    fi
-
-ENV ARCHITECTURE=${ARCHITECTURE}
-ENV IN_MACHINEKIT_BUILDER=1
 
 ######################################################################
 # Package Master Builder Base Cross-builder image
