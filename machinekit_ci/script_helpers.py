@@ -80,19 +80,6 @@ class NormalizePath():
                 self.path)
             raise ValueError(error_message)
 
-    def version_file_valid(self: object) -> bool:
-        version_file = "{}/VERSION".format(self.root_path)
-
-        if not os.path.isfile(version_file):
-            return False
-        with open(version_file, "r") as reader:
-            version_string = reader.read()
-        if version_string:
-            return True
-
-    def is_repository_root(self: object) -> bool:
-        return self.version_file_valid()
-
     def getGitRepositoryRoot(self: object) -> None:
         try:
             self.root_path = sh.git("rev-parse",
@@ -107,12 +94,7 @@ class NormalizePath():
     def __call__(self: object) -> str:
         self.verify_path_exists()
         self.getGitRepositoryRoot()
-        if self.is_repository_root():
-            return self.root_path
-        else:
-            error_message = "Path {} is not a git repository.".format(
-                self.path)
-            raise ValueError(error_message)
+        return self.root_path
 
 class NormalizeSubdir(NormalizePath):
     def __init__(self: object, *paths):
