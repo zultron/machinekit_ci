@@ -33,8 +33,7 @@ runs:
     id: data_matrix_normalizer
     shell: bash -e {0}
     run: |
-      printf "::set-output name=matrix::%s\n" \
-          "$(querybuild github_main_matrix)"
+      echo "matrix=$(querybuild github_main_matrix)" >> $GITHUB_OUTPUT
       echo ::group::Show main matrix
       querybuild --pretty --format yaml github_main_matrix
       echo ::endgroup::
@@ -47,11 +46,11 @@ runs:
     run: |
       if ! [ -z "$CLOUDSMITH_API_KEY" ]
       then
-        printf "%b" "Cloudsmith.io API key found; upload enabled\n"
-        echo "::set-output name=APIKeyPresent::true"
+        echo "Cloudsmith.io API key found; upload enabled"
+        echo "APIKeyPresent=true">> $GITHUB_OUTPUT
       else
-        printf "%b" "Cloudsmith.io API key not found; upload disabled\n"
-        echo "::set-output name=APIKeyPresent::false"
+        echo "Cloudsmith.io API key not found; upload disabled"
+        echo "APIKeyPresent=false" >> $GITHUB_OUTPUT
       fi
 
   - name: Export timestamp of workflow run in seconds since epoch
@@ -59,5 +58,5 @@ runs:
     shell: bash -e {0}
     run: |
       TIMESTAMP=$(date +%s)
-      echo "::set-output name=timestamp::$TIMESTAMP"
-      printf "Timestamp for this workflow run is $TIMESTAMP\n"
+      echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+      echo "Timestamp for this workflow run is $TIMESTAMP"
